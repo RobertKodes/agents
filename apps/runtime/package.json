@@ -1,0 +1,22 @@
+{
+  "name": "@agents/runtime",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc -p .",
+    "test": "vitest run",
+    "start": "tsx src/main.ts",
+    "mcp": "tsx src/mcp.ts"
+  },
+  "dependencies": {
+    "@agents/brand": "workspace:*",
+    "@agents/core": "workspace:*",
+    "@agents/ledger": "workspace:*",
+    "@agents/llm": "workspace:*",
+    "@agents/trace": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "viem": "^2.22.0",
+    "zod": "^3.24.1"
+  }
+}
