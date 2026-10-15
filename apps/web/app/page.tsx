@@ -33,7 +33,7 @@ export default function Landing() {
         </div>
       </section>
 
-      <div className="grid">
+      <div className="grid stats">
         <div className="card stat"><b>{agents?.agents.length ?? "—"}</b><span className="muted">agents</span></div>
         <div className="card stat"><b>{coins?.coins.length ?? "—"}</b><span className="muted">coins launched</span></div>
         <div className="card stat"><b>{coins?.coins.filter((c) => c.opened).length ?? "—"}</b><span className="muted">open to everyone</span></div>

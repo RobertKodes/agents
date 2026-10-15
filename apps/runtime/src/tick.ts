@@ -61,7 +61,7 @@ export async function tick(world: World, agent: Agent, deps: { llm: LlmClient; t
         messages: [{ role: "system", content: SYSTEM(agent) }, { role: "user", content: context(world, agent, deps.quoter) }],
         temperature: 0.8,
       });
-      run.setAttrs({ servedModel: r.servedModel });
+      run.setAttrs({ servedModel: r.servedModel, servedModels: [r.servedModel] });
       let parsed: { thought?: string; actions?: Action[] } = {};
       try {
         parsed = JSON.parse((r.message.content ?? "").replace(/^```(json)?|```$/g, "").trim());
