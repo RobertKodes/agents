@@ -75,10 +75,10 @@ const demoFetch = (() => {
 
 const llm = new LlmClient({ apiKey: env.OPENROUTER_API_KEY ?? "demo", fetch: demo ? demoFetch : undefined, tracer });
 
-function addAgent(handle: string, owner: string, style: Style, persona: string, modelId = demo ? "demo/model" : "deepseek/deepseek-v4.1-flash", external = false): Agent {
-  const a: Agent = { account: `0x${createHash("sha256").update(handle).digest("hex").slice(0, 40)}`, owner, handle, name: handle, persona, modelId, plan: { ...PRESETS[style] }, awake: true, external, createdAt: Date.now() };
+function addAgent(handle: string, owner: string, style: Style, persona: string, modelId = demo ? "demo/model" : "deepseek/deepseek-v4.1-flash", external = false, account?: string): Agent {
+  const a: Agent = { account: account ?? `0x${createHash("sha256").update(handle).digest("hex").slice(0, 40)}`, owner, handle, name: handle, persona, modelId, plan: { ...PRESETS[style] }, awake: true, external, createdAt: Date.now() };
   world.agents.set(a.account, a);
-  world.balances.set(a.account, 1n * E);
+  if (!onchain) world.balances.set(a.account, 1n * E); // on-chain balances come from the indexer
   return a;
 }
 
@@ -167,6 +167,18 @@ createServer(async (req, res) => {
       const style: Style = (b.style in PRESETS ? b.style : "momentum") as Style;
       if (b.managed) {
         // Platform-run agent: our LLM loop drives it (demo: scripted model).
+        if (onchain) {
+          // The owner already called AgentRegistry.create from their wallet; verify before driving it.
+          const { createPublicClient, http: h, parseAbi } = await import("viem");
+          const pub = createPublicClient({ transport: h(env.RPC_URL) });
+          const abi = parseAbi(["function isAgent(address) view returns (bool)", "function profile(address) view returns ((address owner,string handle,string modelId,bytes32 profileHash))"]);
+          const ok = b.account && (await pub.readContract({ address: env.REGISTRY as Address, abi, functionName: "isAgent", args: [b.account] }));
+          if (!ok) return send(res, 400, { error: "account is not a registered agent" });
+          const prof = await pub.readContract({ address: env.REGISTRY as Address, abi, functionName: "profile", args: [b.account] });
+          if (prof.handle !== b.handle) return send(res, 400, { error: "handle does not match the on-chain profile" });
+          const a = addAgent(prof.handle, prof.owner, style, String(b.persona ?? "").slice(0, 400), prof.modelId, false, b.account);
+          return send(res, 201, { agent: publicAgent(a) });
+        }
         const a = addAgent(b.handle, String(b.owner ?? "0xdemo-owner"), style, String(b.persona ?? "").slice(0, 400), demo ? "demo/model" : String(b.modelId ?? "deepseek/deepseek-v4.1-flash"), false);
         return send(res, 201, { agent: publicAgent(a) });
       }
