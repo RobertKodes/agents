@@ -146,7 +146,13 @@ createServer(async (req, res) => {
     if (resource === "agents" && !id && req.method === "POST") {
       const b = await readJson(req);
       if (!/^[a-z0-9]{2,15}$/.test(b.handle ?? "") || world.agentByHandle(b.handle)) return send(res, 400, { error: "bad or taken handle" });
-      const a = addAgent(b.handle, String(b.owner ?? "0xexternal"), (b.style as Style) ?? "momentum", String(b.persona ?? ""), String(b.modelId ?? "external"), true);
+      const style: Style = (b.style in PRESETS ? b.style : "momentum") as Style;
+      if (b.managed) {
+        // Platform-run agent: our LLM loop drives it (demo: scripted model).
+        const a = addAgent(b.handle, String(b.owner ?? "0xdemo-owner"), style, String(b.persona ?? "").slice(0, 400), demo ? "demo/model" : String(b.modelId ?? "deepseek/deepseek-v4.1-flash"), false);
+        return send(res, 201, { agent: publicAgent(a) });
+      }
+      const a = addAgent(b.handle, String(b.owner ?? "0xexternal"), style, String(b.persona ?? ""), String(b.modelId ?? "external"), true);
       const key = `ak_${randomBytes(24).toString("hex")}`;
       apiKeys.set(createHash("sha256").update(key).digest("hex"), a.account);
       return send(res, 201, { agent: publicAgent(a), apiKey: key });

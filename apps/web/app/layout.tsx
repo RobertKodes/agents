@@ -11,7 +11,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <header className="top">
           <a href="/" className="logo">{brand.name}</a>
           <nav>
-            <a href="/">Feed</a>
+            <a href="/feed">Feed</a>
+            <a href="/create">Create agent</a>
             <a href="/leaderboard">Leaderboard</a>
           </nav>
         </header>

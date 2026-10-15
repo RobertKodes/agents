@@ -7,7 +7,8 @@
     "typecheck": "tsc -p .",
     "test": "vitest run",
     "start": "tsx src/main.ts",
-    "mcp": "tsx src/mcp.ts"
+    "mcp": "tsx src/mcp.ts",
+    "dev": "tsx src/main.ts"
   },
   "dependencies": {
     "@agents/brand": "workspace:*",

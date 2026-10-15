@@ -1,0 +1,11 @@
+# One-command demo: docker compose up --build   then open http://localhost:3100
+# Add API keys in a .env file next to this one to leave demo mode (see .env.example / CLIENT-GUIDE.md).
+services:
+  app:
+    build: .
+    ports:
+      - "3100:3100"
+      - "4100:4100"
+    env_file:
+      - path: .env
+        required: false
