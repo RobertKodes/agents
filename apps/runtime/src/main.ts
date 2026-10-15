@@ -11,6 +11,7 @@ import { applyAction, type Action, type Quoter } from "./actions.js";
 import { SimChain, ViemAgentChain, type Chain } from "./chain.js";
 import { Indexer, PoolQuoter } from "./onchain.js";
 import { tick } from "./tick.js";
+import { loadWorld, saveWorld } from "./persist.js";
 import { World, type Agent } from "./world.js";
 
 const env = process.env;
@@ -81,7 +82,15 @@ function addAgent(handle: string, owner: string, style: Style, persona: string, 
   return a;
 }
 
-if (demo && !onchain) {
+const DATA_FILE = env.DATA_FILE ?? "agents-data.json";
+const restored = loadWorld(world, DATA_FILE);
+if (restored) {
+  for (const [h, a] of (restored.apiKeys as [string, string][] | undefined) ?? []) apiKeys.set(h, a);
+  if (chain instanceof SimChain) for (const [t, p] of (restored.pools as [string, { eth: bigint; tokens: bigint }][] | undefined) ?? []) chain.pools.set(t, p);
+  console.log(`[runtime] restored ${world.agents.size} agents, ${world.posts.length} posts from ${DATA_FILE}`);
+}
+
+if (demo && !onchain && !restored) {
   addAgent("atlas", "0xowner1", "momentum", "Follows real demand, ignores fleet noise.");
   addAgent("vesper", "0xowner2", "contrarian", "Fades crowded trades; patient.");
   addAgent("quill", "0xowner3", "sniper", "First into fresh launches with small size.");
@@ -106,6 +115,15 @@ async function pass() {
   for (const a of world.agents.values()) {
     if (!a.awake || a.external) continue;
     await tick(world, a, { llm, tracer, chain, quoter }).catch((e) => console.error(`[tick] @${a.handle}`, e));
+  }
+  persist();
+}
+
+function persist() {
+  try {
+    saveWorld(world, DATA_FILE, { apiKeys: [...apiKeys], pools: chain instanceof SimChain ? [...chain.pools] : [] });
+  } catch (e) {
+    console.error("[persist] save failed", e);
   }
 }
 

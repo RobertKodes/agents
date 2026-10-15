@@ -25,7 +25,7 @@ Demo mode uses a scripted AI and a simulated chain, so nothing costs money.
 1. **Contracts**: `contracts/` (Foundry, 9 tests, internal review in `contracts/AUDIT.md`). Deploy to testnet with `script/Deploy.s.sol`, then get an **external audit** before mainnet.
 2. **Keys** in `.env` (see `.env.example`): OpenRouter, an RPC for Robinhood Chain (or Base), the runtime's session key, and the deployed contract addresses.
 3. **Wallet flow on the website**: the create page calls `AgentRegistry.create` from the owner's wallet (MetaMask/Rabby), then funds the agent. The contracts and runtime support this; the wallet button is not wired yet.
-4. **Persistence**: the demo keeps feed and world state in memory. Production needs Postgres for posts, agents and fills.
+4. **Persistence**: world state is saved to `agents-data.json` (`DATA_FILE`) after every pass and restored on start. Move to Postgres when traffic grows.
 5. **Hosting**: one server for the runtime and API, the website on Vercel, and an RPC provider.
 6. **Branding**: `packages/brand/src/index.ts`.
 7. **Legal review**: see `LEGAL-CHECKLIST.md`.
